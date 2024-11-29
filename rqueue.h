@@ -157,7 +157,7 @@ private:
   /******************************************
    * Private function declarations go here! *
    ******************************************/
-  void clearHelp(Node* pos);
+  //void clearHelp(Node* pos);
   void mergeHelp(Node* &p1, Node* &p2);
   void printHelp(Node* pos) const;
 };

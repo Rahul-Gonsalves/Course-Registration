@@ -19,9 +19,9 @@ clean:
 	rm -f *~*.hgch *#
 	rm -f *~ *.h.gch *#
 
-val:
-#	valgrind -s --track-origins=yes ./mytest.out
-	valgrind -s --track-origins=yes ./driver.out
+val: driver.out mytest.out
+	valgrind -s --track-origins=yes ./mytest.out
+#	valgrind -s --track-origins=yes ./driver.out
 
 run: driver.out mytest.out
 	./driver.out

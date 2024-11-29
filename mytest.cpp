@@ -97,6 +97,7 @@ int main() {
         cout << "Insertions failed" << endl;
     }
 
+    // Test basic merge
     cout << "Testing basic merge" << endl;
     if(tester.testBasicMerge(queue1, queue2)) {
         cout << "Merge passed" << endl;
@@ -105,6 +106,7 @@ int main() {
         cout << "Merge failed" << endl;
     }
 
+    // Change priority function
     cout << "Testing basic change priority" << endl;
     if(tester.testBasicChangePriority(queue1)) {
         cout << "Change priority passed" << endl;

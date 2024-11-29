@@ -55,28 +55,28 @@ void RQueue::insertStudent(const Student& input) {
   }
 
   //create a new minheap to merge to the current heap
-  RQueue newQueue(priority);
-  newQueue._heap = new Node(input);
-  newQueue._size = 1;
-
-  mergeWithQueue(newQueue);
+  Node* newNode = new Node(input);
+  mergeHelp(_heap, newNode);
+  _size++;
+  
 }
 
 Student RQueue::getNextStudent() {
-  if (_size == 0) {
+  if (_heap == nullptr || _size == 0) {
     throw domain_error("Queue is empty.");
   }
-  int size = _size - 1;
+
   Student student = _heap->_student; // get the student with the highest priority
   
   Node* left = _heap->_left; 
   Node* right = _heap->_right; 
-  delete _heap; // delete the root node
+  delete _heap; // delete the root node (keep the left and right subtrees)
+  _heap = nullptr;
   
-  mergeHelp(left, right); // merge the left and right subtrees
+  mergeHelp(left, right); 
   _heap = left; // set the heap to the merged heap
 
-  _size = size; // decrement the size
+  _size--; // decrement the size
   return student;
 }
 
@@ -87,35 +87,17 @@ void RQueue::mergeWithQueue(RQueue& rhs) {
     throw domain_error("Priority functions do not match.");
   }
 
-  if (_heap == nullptr) { // if the heap is empty, set the heap to the rhs heap
-
-    if(rhs._heap == nullptr) { return; } // if the rhs heap is empty, return
-    _heap = new Node(*rhs._heap); 
-    //rhs.clear();
-    rhs._heap = nullptr;
-  } 
-  else if (rhs._heap == nullptr) { return; } // if the rhs heap is empty, return
-  else { // if both heaps are not empty
-    _size += rhs._size; // add the size of the rhs heap to the size of the current heap
-
-    // if the rhs heap has a higher priority (lower number), swap the heaps
-    if (priority(_heap->_student) > priority(rhs._heap->_student)) { 
-      //swap the heaps
-      Node *temp = _heap;
-      _heap = rhs._heap;
-      rhs._heap = temp;
-    }
-    //now recursively merge rhs and the left subtree of the heap, replacing the left subtree of p1 with the result of the recursive merge.
-    mergeHelp(_heap, rhs._heap); // call helper function to merge the two heaps
-    
-  }
+  mergeHelp(_heap, rhs._heap); // merge the two heaps
+  _size += rhs._size; // update the size
+  rhs._size = 0; // set the size of the rhs heap to 0
+  rhs.clear(); // clear the rhs heap
 }
 
 void RQueue::mergeHelp(Node* &p1, Node* &p2) {
   //If p1 is nullptr, return p2
   if (p1 == nullptr) {
     if(p2 == nullptr) { return; } // if the rhs heap is empty, return
-    p1 = new Node(*p2);
+    p1 = p2;
     p2 = nullptr;
     return;
   }
@@ -138,25 +120,16 @@ void RQueue::mergeHelp(Node* &p1, Node* &p2) {
 
   //Recursively merge p2 with the left subtree of p1
   mergeHelp(p1->_left, p2);
+  p2 = nullptr;
 }
 
 void RQueue::clear() {
-  if (_size == 0) { // if the heap is empty, return
+  if(_heap == nullptr) {
     return;
   }
-  clearHelp(_heap); // call helper funct to delete all nodes
-  _heap = nullptr;
-  _size = 0;
-}
-
-void RQueue::clearHelp(Node *pos) {
-  if(pos == nullptr) {
-    return;
+  while(_size > 0) {
+    getNextStudent();
   }
-  clearHelp(pos->_left);
-  clearHelp(pos->_right);
-  delete pos;
-  pos = nullptr;
 }
 
 int RQueue::numStudents() const
@@ -192,18 +165,15 @@ void RQueue::setPriorityFn(prifn_t priFn) {
   priority = priFn;
   
   //rebuild the heap
-  RQueue newQueue(priority);
-  while (_size > 0) {
-    newQueue.insertStudent(getNextStudent());
+  Student* students = new Student[size];
+  for (int i = 0; i < size; i++) {
+    students[i] = getNextStudent();
   }
-  delete _heap;
-
-  _heap = newQueue._heap;
-  _size = size; //reset the size
-
-  newQueue._heap = nullptr;
-
-
+  clear();
+  for (int i = 0; i < size; i++) {
+    insertStudent(students[i]);
+  }
+  delete[] students;
 }
 
 // for debugging
