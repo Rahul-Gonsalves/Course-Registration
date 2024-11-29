@@ -18,16 +18,15 @@ RQueue::~RQueue()
   clear();
 }
 
-RQueue::RQueue(const RQueue& rhs)
+RQueue::RQueue(const RQueue& rhs) 
 {
-
-  clear();
   if(rhs._size == 0) {
     _size = 0;
     priority = rhs.priority;
+    _heap = nullptr;
     return;
   }
-  _heap = new Node (*rhs._heap); //deep copy
+  _heap = deepCopy(rhs._heap);
   _size = rhs._size;
   priority = rhs.priority;
 }
@@ -39,12 +38,21 @@ RQueue& RQueue::operator=(const RQueue& rhs)
   }
   
   clear();
-  _heap = new Node (*rhs._heap); //deep copy
+  _heap = deepCopy(rhs._heap);
   _size = rhs._size;
   priority = rhs.priority;
   return *this;
-  
+}
 
+Node* RQueue::deepCopy(Node* copy) //if there is a need to deep copy
+{
+  if(copy == nullptr) {
+    return nullptr;
+  }
+  Node* newNode = new Node(copy->_student);
+  newNode->_left = deepCopy(copy->_left);
+  newNode->_right = deepCopy(copy->_right);
+  return newNode;
 }
 
 void RQueue::insertStudent(const Student& input) {
@@ -89,20 +97,18 @@ void RQueue::mergeWithQueue(RQueue& rhs) {
 
   mergeHelp(_heap, rhs._heap); // merge the two heaps
   _size += rhs._size; // update the size
-  rhs._size = 0; // set the size of the rhs heap to 0
-  rhs.clear(); // clear the rhs heap
+  rhs._size = 0; 
+  rhs.clear(); 
 }
 
 void RQueue::mergeHelp(Node* &p1, Node* &p2) {
   //If p1 is nullptr, return p2
-  if (p1 == nullptr) {
-    if(p2 == nullptr) { return; } // if the rhs heap is empty, return
-    p1 = p2;
-    p2 = nullptr;
+  if(p2 == nullptr) {
     return;
   }
-  //If p2 is nullptr, return p1
-  else if (p2 == nullptr) {
+  else if (p1 == nullptr) {
+    p1 = p2;
+    p2 = nullptr;
     return;
   }
 
@@ -127,9 +133,11 @@ void RQueue::clear() {
   if(_heap == nullptr) {
     return;
   }
-  while(_size > 0) {
+  while(_heap != nullptr) {
     getNextStudent();
   }
+  _size = 0;
+  _heap = nullptr;
 }
 
 int RQueue::numStudents() const
@@ -173,6 +181,7 @@ void RQueue::setPriorityFn(prifn_t priFn) {
   for (int i = 0; i < size; i++) {
     insertStudent(students[i]);
   }
+  _size = size; //ensure same size
   delete[] students;
 }
 
