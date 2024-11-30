@@ -63,32 +63,40 @@ void RQueue::insertStudent(const Student& input) {
     return;
   }
 
-  //create a new minheap to merge to the current heap
-  Node* newNode = new Node(input);
-  mergeHelp(_heap, newNode);
-  _size++;
+  // Create a new heap with the input student
+  RQueue newHeap = RQueue(priority);
+  newHeap._heap = new Node(input);
+  newHeap._size = 1;
+
+  // Merge the current heap into the new heap
+  newHeap.mergeWithQueue(*this);
+  delete _heap; // delete the current heap
+
+  // Update the current heap to be the new merged heap
+  _heap = newHeap._heap;
+  _size = newHeap._size;
+
+  newHeap._heap = nullptr;
+  newHeap._size = 0;
   
 }
 
 Student RQueue::getNextStudent() {
   if (_heap == nullptr || _size == 0) {
-    throw domain_error("Queue is empty.");
+    throw std::domain_error("Queue is empty.");
   }
 
-  Student student = _heap->_student; // get the student with the highest priority
-  
-  Node* left = _heap->_left; 
-  Node* right = _heap->_right; 
-  delete _heap; // delete the root node (keep the left and right subtrees)
-  _heap = nullptr;
-  
-  mergeHelp(left, right); 
-  _heap = left; // set the heap to the merged heap
+  // Pop off the root student
+  Student student = _heap->_student;
 
-  _size--; // decrement the size
+  // Remove the root and reheapify
+  Node* oldHeap = _heap;
+  _heap = mergeHelp(_heap->_left, _heap->_right);
+  delete oldHeap;
+  _size--;
+
   return student;
 }
-
 
 void RQueue::mergeWithQueue(RQueue& rhs) { 
   //check priority function
@@ -96,21 +104,21 @@ void RQueue::mergeWithQueue(RQueue& rhs) {
     throw domain_error("Priority functions do not match.");
   }
 
-  mergeHelp(_heap, rhs._heap); // merge the two heaps
   _size += rhs._size; // update the size
+  _heap = mergeHelp(_heap, rhs._heap); // merge the two heaps
+  
+
   rhs._size = 0; 
-  rhs.clear(); 
+  rhs._heap = nullptr;
 }
 
-void RQueue::mergeHelp(Node* &p1, Node* &p2) {
+Node* RQueue::mergeHelp(Node* p1, Node* p2) {
   //If p1 is nullptr, return p2
   if(p2 == nullptr) {
-    return;
+    return p1;
   }
   else if (p1 == nullptr) {
-    p1 = p2;
-    p2 = nullptr;
-    return;
+    return p2;
   }
 
   //If p1 does not have higher priority than p2, swap p1 and p2
@@ -122,12 +130,11 @@ void RQueue::mergeHelp(Node* &p1, Node* &p2) {
 
   //Swap the left and right subtrees of p1
   Node *temp = p1->_left;
-  p1->_left = p1->_right;
+  //Recursively merge p2 with the subtree of p1
+  p1->_left = mergeHelp(p1->_right, p2);
   p1->_right = temp;
 
-  //Recursively merge p2 with the left subtree of p1
-  mergeHelp(p1->_left, p2);
-  p2 = nullptr;
+  return p1;
 }
 
 void RQueue::clear() {
