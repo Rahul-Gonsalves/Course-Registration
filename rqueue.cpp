@@ -5,6 +5,7 @@ using namespace std;
 using std::cout;
 using std::endl;
 using std::domain_error;
+#include <vector>
 
 RQueue::RQueue(prifn_t priFn)
 {
@@ -147,12 +148,14 @@ int RQueue::numStudents() const
 
 void RQueue::printStudentQueue() const {
   //preorder traversal
+  cout << "Contents of the student queue:" << endl;
   printHelp(_heap);
   
 }
 void RQueue::printHelp(Node* pos) const {
+  
   if (pos != nullptr) {
-    cout << pos->_student << endl;
+    cout << "[" <<priority(pos->_student) << "] " << pos->_student << endl;
     printHelp(pos->_left);
     printHelp(pos->_right);
   }
@@ -168,22 +171,23 @@ prifn_t RQueue::getPriorityFn() const {
 }
 
 void RQueue::setPriorityFn(prifn_t priFn) {
+  //if the new function is the same as the current, do nothing
+  if(priFn == priority) { return; } 
 
-  int size = _size; //keep the size for later
-  priority = priFn;
-  
-  //rebuild the heap
-  Student* students = new Student[size];
-  for (int i = 0; i < size; i++) {
-    students[i] = getNextStudent();
-  }
-  clear();
-  for (int i = 0; i < size; i++) {
-    insertStudent(students[i]);
-  }
-  _size = size; //ensure same size
-  delete[] students;
+    // put all students into a vector
+    std::vector<Student> students;
+    while (_heap != nullptr) {
+      students.push_back(getNextStudent());
+    }
+
+    priority = priFn;
+
+    // Rebuild the heap
+    for (const auto& student : students) {
+        insertStudent(student);
+    }
 }
+
 
 // for debugging
 void RQueue::dump() const
